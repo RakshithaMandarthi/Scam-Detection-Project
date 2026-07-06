@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scam Detector</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    color: white;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.card {
+    background: rgba(255,255,255,0.08);
+    padding: 30px;
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    animation: fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn {
+    from {opacity:0; transform: translateY(20px);}
+    to {opacity:1; transform: translateY(0);}
+}
+
+.logo {
+    font-size: 32px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.title {
+    font-size: 26px;
+    margin: 10px 0;
+    text-shadow: 0 0 10px #00ffc3, 0 0 20px #00ffc3;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(45deg,#00c853,#69f0ae);
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button:active {
+    transform: scale(0.9);
+}
+
+.small-btn {
+    width: auto;
+    padding: 5px 10px;
+    font-size: 12px;
+    margin: 0;
+}
+
+.top-left {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+.top-right {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+}
+
+.row {
+    display: flex;
+    gap: 5px;
+}
+
+.row button {
+    width: 50%;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 5px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.6);
+}
+
+label {
+    display: block;
+    text-align: left;
+    margin-top: 10px;
+}
+
+.hidden { display: none; }
+.error { color: red; }
+.success { color: lightgreen; }
+
+/* NEW: Progress Bar */
+.progress {
+    width:100%;
+    height:10px;
+    background:#333;
+    border-radius:10px;
+    margin-top:10px;
+}
+
+.progress-bar {
+    height:100%;
+    width:0%;
+    border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- WELCOME -->
+<div id="welcome" class="container">
+<div class="card">
+<div class="logo">🛡️ Scam Detector</div>
+<h2 class="title">Welcome to our Scam Detector Tool</h2>
+<p>Stay Safe from Online Frauds 🚨</p>
+
+<button onclick="showPage('create')">Create Account</button>
+<button onclick="showPage('login')">Login Account</button>
+</div>
+</div>
+
+<!-- CREATE -->
+<div id="create" class="container hidden">
+<button class="small-btn top-left" onclick="goBack()">Back</button>
+
+<div class="card">
+<div class="logo">🛡️ Scam Detector</div>
+<h2>Create Account</h2>
+
+<label>Enter the username</label>
+<input id="newUser">
+
+<label>Enter the password</label>
+<input id="newPass" type="password">
+
+<p id="createMsg"></p>
+
+<button onclick="createAccount()">Create Account</button>
+</div>
+</div>
+
+<!-- LOGIN -->
+<div id="login" class="container hidden">
+<button class="small-btn top-left" onclick="goBack()">Back</button>
+
+<div class="card">
+<div class="logo">🛡️ Scam Detector</div>
+<h2>Login Account</h2>
+
+<input id="loginUser" placeholder="Username">
+<input id="loginPass" type="password" placeholder="Password">
+
+<p id="loginMsg"></p>
+
+<button onclick="login()">Login</button>
+</div>
+</div>
+
+<!-- ANALYSIS -->
+<div id="analysis" class="container hidden">
+
+<div class="top-right">
+<select id="lang" class="small-btn">
+<option value="en">EN</option>
+<option value="kn">KN</option>
+<option value="hi">HI</option>
+</select>
+<button class="small-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="card">
+<div class="logo">🛡️ Scam Detector</div>
+
+<label>Enter message to analyze</label>
+<textarea id="message" rows="4"></textarea>
+
+<!-- NEW -->
+<div id="warning" class="error"></div>
+
+<div class="progress">
+<div id="bar" class="progress-bar"></div>
+</div>
+
+<div class="row">
+<button onclick="analyze()">Analyze Message</button>
+<button onclick="clearText()">Clear</button>
+</div>
+
+<h3 id="result"></h3>
+<p id="explanation"></p>
+</div>
+</div>
+
+<script>
+let users = {};
+
+function clearMessages(){
+createMsg.innerHTML="";
+loginMsg.innerHTML="";
+result.innerHTML="";
+explanation.innerHTML="";
+warning.innerHTML="";
+}
+
+function showPage(page){
+document.querySelectorAll('.container').forEach(p=>p.classList.add('hidden'));
+document.getElementById(page).classList.remove('hidden');
+clearInputs();
+clearMessages();
+}
+
+function clearInputs(){
+document.querySelectorAll("input, textarea").forEach(i=>i.value="");
+}
+
+function goBack(){ showPage('welcome'); }
+function logout(){ showPage('welcome'); }
+
+// CREATE
+function createAccount(){
+let user=newUser.value.trim();
+let pass=newPass.value.trim();
+
+if(user=="" || pass==""){
+createMsg.innerHTML="Please enter username and password";
+createMsg.className="error";
+}
+else if(users[user]){
+createMsg.innerHTML="User already exists";
+createMsg.className="error";
+}
+else if(pass.length<8 || !/[#!@&]/.test(pass)){
+createMsg.innerHTML="Weak password";
+createMsg.className="error";
+}
+else{
+users[user]=pass;
+createMsg.innerHTML="Account created successfully";
+createMsg.className="success";
+}
+}
+
+// LOGIN
+function login(){
+let user=loginUser.value.trim();
+let pass=loginPass.value.trim();
+
+if(user=="" || pass==""){
+loginMsg.innerHTML="Please enter username and password";
+loginMsg.className="error";
+}
+else if(!users[user]){
+loginMsg.innerHTML="Please create account";
+loginMsg.className="error";
+}
+else if(users[user]!==pass){
+loginMsg.innerHTML="Wrong password";
+loginMsg.className="error";
+}
+else{
+showPage('analysis');
+}
+}
+
+// REAL-TIME WARNING
+message.addEventListener("input", function(){
+let text = message.value.toLowerCase();
+
+if(text.includes("http://")){
+    warning.innerHTML="⚠ This link looks unsafe";
+}
+else if(text.includes("win") || text.includes("free") || text.includes("click") || text.includes("offer")){
+    warning.innerHTML="⚠ Suspicious content detected";
+}
+else{
+    warning.innerHTML="";
+}
+});
+
+// ANALYZE
+function analyze(){
+let text = message.value.toLowerCase();
+let lang = document.getElementById("lang").value;
+
+let score = 0;
+
+["win","free","prize","money","offer","click"].forEach(w=>{if(text.includes(w))score++;});
+["now","immediately"].forEach(w=>{if(text.includes(w))score++;});
+if(text.includes("http://")) score+=2;
+
+let percent = Math.min(score*20,100);
+bar.style.width = percent + "%";
+
+if(percent>=80){
+bar.style.background="red";
+result.innerHTML="🚨 Scam";
+result.style.color="red";
+explanation.innerHTML=getScam(lang);
+}
+else if(percent>=40){
+bar.style.background="orange";
+result.innerHTML="⚠ Suspicious";
+result.style.color="orange";
+explanation.innerHTML=getSuspicious(lang);
+}
+else{
+bar.style.background="lightgreen";
+result.innerHTML="✅ Safe";
+result.style.color="lightgreen";
+explanation.innerHTML=getSafe(lang);
+}
+}
+
+// MULTI LANGUAGE
+function getScam(lang){
+if(lang=="kn") return "ಈ ಸಂದೇಶವು ಮೋಸವಾಗಿದೆ. ಇದು ನಿಮ್ಮ ಮಾಹಿತಿಯನ್ನು ಕದಿಯಬಹುದು ಮತ್ತು ನಿಮ್ಮ ಮೊಬೈಲ್ ಅಥವಾ ಸಿಸ್ಟಮ್‌ಗೆ ಅಪಾಯ ಉಂಟುಮಾಡಬಹುದು.";
+if(lang=="hi") return "यह संदेश स्कैम है। यह आपकी जानकारी चुरा सकता है और आपके सिस्टम को नुकसान पहुंचा सकता है।";
+return "This message is a scam. It may steal your data and harm your system or mobile.";
+}
+
+function getSuspicious(lang){
+if(lang=="kn") return "ಈ ಸಂದೇಶ ಅನುಮಾನಾಸ್ಪದವಾಗಿದೆ.";
+if(lang=="hi") return "यह संदेश संदिग्ध है।";
+return "This message looks suspicious.";
+}
+
+function getSafe(lang){
+if(lang=="kn") return "<span class='success'>ಈ ಸಂದೇಶ ಅಥವಾ ಲಿಂಕ್ ಸುರಕ್ಷಿತವಾಗಿದೆ. ಇದು ನಿಮ್ಮ ಸಿಸ್ಟಮ್‌ಗೆ ಹಾನಿ ಮಾಡುವುದಿಲ್ಲ.</span>";
+if(lang=="hi") return "<span class='success'>यह संदेश या लिंक सुरक्षित है। यह नुकसान नहीं पहुंचाएगा।</span>";
+return "<span class='success'>This message or link is normal message, it will not harm your system or mobile.</span>";
+}
+
+function clearText(){
+message.value="";
+result.innerHTML="";
+explanation.innerHTML="";
+warning.innerHTML="";
+}
+</script>
+
+</body>
+</html>
